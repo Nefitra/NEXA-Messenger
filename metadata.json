@@ -1,0 +1,6 @@
+{
+  "name": "NEXA",
+  "description": "Telegram-style messenger client concept with an integrated platform containing a TON wallet, city-discovery, ratings, and 20+ mini-service shortcuts.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
