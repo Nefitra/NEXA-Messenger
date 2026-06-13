@@ -30,8 +30,10 @@ class MainActivity : ComponentActivity() {
     enableEdgeToEdge()
 
     setContent {
-      MyApplicationTheme {
-        val viewModel: NexaViewModel = remember { NexaViewModel() }
+      val viewModel: ToninoViewModel = remember { ToninoViewModel() }
+      val themeMode by viewModel.tgThemeMode.collectAsState()
+
+      MyApplicationTheme(themeMode = themeMode) {
         val currentScreen by viewModel.currentScreen.collectAsState()
         val selectedChatId by viewModel.selectedChatId.collectAsState()
         val selectedServiceId by viewModel.selectedServiceId.collectAsState()
@@ -44,84 +46,86 @@ class MainActivity : ComponentActivity() {
           showAdminPanelInstead = false
         }
 
-        Scaffold(
-          modifier = Modifier.fillMaxSize(),
-          containerColor = MidnightBlue,
-          bottomBar = {
-            // Render fixed standard bottom bar only if we are NOT inside a full-screen detailed chat conversation
-            if (selectedChatId == null) {
-              NexaBottomNav(
-                currentScreen = if (showAdminPanelInstead) Screen.Profile else currentScreen,
-                onScreenSelected = { target ->
-                  showAdminPanelInstead = false
-                  viewModel.navigateTo(target)
-                }
-              )
-            }
-          },
-          floatingActionButton = {
-            // Render administrative shortcut FAB if simulation mode is active (and not engaged in active chat)
-            if (isAdminSimulated && selectedChatId == null) {
-              FloatingActionButton(
-                onClick = { showAdminPanelInstead = !showAdminPanelInstead },
-                containerColor = if (showAdminPanelInstead) ErrorRed else Color(0xFF6200EE),
-                contentColor = Color.White,
-                modifier = Modifier.testTag("admin_fab_toggle")
-              ) {
-                Icon(
-                  imageVector = Icons.Default.Shield,
-                  contentDescription = "Toggle Administration Console"
+        TelegramSimulatorWrapper(viewModel = viewModel) {
+          Scaffold(
+            modifier = Modifier.fillMaxSize(),
+            containerColor = MidnightBlue,
+            bottomBar = {
+              // Render fixed standard bottom bar only if we are NOT inside a full-screen detailed chat conversation
+              if (selectedChatId == null) {
+                ToninoBottomNav(
+                  currentScreen = if (showAdminPanelInstead) Screen.Profile else currentScreen,
+                  onScreenSelected = { target ->
+                    showAdminPanelInstead = false
+                    viewModel.navigateTo(target)
+                  }
                 )
               }
-            }
-          }
-        ) { innerPadding ->
-          Box(
-            modifier = Modifier
-              .fillMaxSize()
-              .background(MidnightBlue)
-              .padding(innerPadding)
-          ) {
-            if (selectedChatId != null) {
-              // Direct fullscreen chat thread overrides main tab content
-              ChatWindow(
-                chatId = selectedChatId!!,
-                viewModel = viewModel,
-                onBack = { viewModel.selectChat(null) },
-                onOpenService = { serviceId ->
-                  viewModel.selectService(serviceId)
+            },
+            floatingActionButton = {
+              // Render administrative shortcut FAB if simulation mode is active (and not engaged in active chat)
+              if (isAdminSimulated && selectedChatId == null) {
+                FloatingActionButton(
+                  onClick = { showAdminPanelInstead = !showAdminPanelInstead },
+                  containerColor = if (showAdminPanelInstead) ErrorRed else Color(0xFF6200EE),
+                  contentColor = Color.White,
+                  modifier = Modifier.testTag("admin_fab_toggle")
+                ) {
+                  Icon(
+                    imageVector = Icons.Default.Shield,
+                    contentDescription = "Toggle Administration Console"
+                  )
                 }
-              )
-            } else if (showAdminPanelInstead) {
-              // Admin portal display logic
-              PartnerAdminPanel(viewModel = viewModel)
-            } else {
-              // Main Tab navigation body switch
-              when (currentScreen) {
-                is Screen.Chats -> ChatsTab(
-                  viewModel = viewModel,
-                  onSelectChat = { id -> viewModel.selectChat(id) }
-                )
-                is Screen.Discover -> DiscoverTab(
-                  viewModel = viewModel,
-                  onOpenService = { id -> viewModel.selectService(id) }
-                )
-                is Screen.Crypto -> CryptoTab(viewModel = viewModel)
-                is Screen.Services -> ServicesTab(
-                  viewModel = viewModel,
-                  onOpenService = { id -> viewModel.selectService(id) }
-                )
-                is Screen.Profile -> ProfileTab(viewModel = viewModel)
               }
             }
+          ) { innerPadding ->
+            Box(
+              modifier = Modifier
+                .fillMaxSize()
+                .background(MidnightBlue)
+                .padding(innerPadding)
+            ) {
+              if (selectedChatId != null) {
+                // Direct fullscreen chat thread overrides main tab content
+                ChatWindow(
+                  chatId = selectedChatId!!,
+                  viewModel = viewModel,
+                  onBack = { viewModel.selectChat(null) },
+                  onOpenService = { serviceId ->
+                    viewModel.selectService(serviceId)
+                  }
+                )
+              } else if (showAdminPanelInstead) {
+                // Admin portal display logic
+                PartnerAdminPanel(viewModel = viewModel)
+              } else {
+                // Main Tab navigation body switch
+                when (currentScreen) {
+                  is Screen.Chats -> ChatsTab(
+                    viewModel = viewModel,
+                    onSelectChat = { id -> viewModel.selectChat(id) }
+                  )
+                  is Screen.Discover -> DiscoverTab(
+                    viewModel = viewModel,
+                    onOpenService = { id -> viewModel.selectService(id) }
+                  )
+                  is Screen.Crypto -> CryptoTab(viewModel = viewModel)
+                  is Screen.Services -> ServicesTab(
+                    viewModel = viewModel,
+                    onOpenService = { id -> viewModel.selectService(id) }
+                  )
+                  is Screen.Profile -> ProfileTab(viewModel = viewModel)
+                }
+              }
 
-            // Global Overlay Dialog for Product Detail Cards if a partner is clicked
-            selectedServiceId?.let { sId ->
-              ServiceDetailDialog(
-                serviceId = sId,
-                viewModel = viewModel,
-                onDismiss = { viewModel.selectService(null) }
-              )
+              // Global Overlay Dialog for Product Detail Cards if a partner is clicked
+              selectedServiceId?.let { sId ->
+                ServiceDetailDialog(
+                  serviceId = sId,
+                  viewModel = viewModel,
+                  onDismiss = { viewModel.selectService(null) }
+                )
+              }
             }
           }
         }

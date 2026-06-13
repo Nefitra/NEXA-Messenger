@@ -76,7 +76,7 @@ object MockData {
       id = "adboost",
       name = "AdBoost",
       category = "Advertising Platform",
-      description = "Promote your own channels, groups or mini-services to target regions instantly. Pay with system NEX tokens and track performance.",
+      description = "Promote your own channels, groups or mini-services to target regions instantly. Pay with system TONI tokens and track performance.",
       iconName = "Campaign",
       logo = null,
       rating = 4.5f,
@@ -148,7 +148,7 @@ object MockData {
       id = "foodnear",
       name = "FoodNear",
       category = "Restaurants",
-      description = "Reserve fine tables or order lightning fast ecosystem-coupled delivery from local premium kitchens. Earn solid 5% NEX cashback on orders.",
+      description = "Reserve fine tables or order lightning fast ecosystem-coupled delivery from local premium kitchens. Earn solid 5% TONI cashback on orders.",
       iconName = "Restaurant",
       logo = null,
       rating = 4.7f,
@@ -464,14 +464,14 @@ object MockData {
       isPinned = true,
       isGroup = false,
       messages = listOf(
-        Message("m3", "user", "Me", "Hey Pavel! We are launching NEXA today, combining chats and physical partners, using TON wallet connections.", "12:05", true),
+        Message("m3", "user", "Me", "Hey Pavel! We are launching Tonino today, combining chats and physical partners, using TON wallet connections.", "12:05", true),
         Message("m4", "pavel", "Pavel Durov", "Sounds fantastic. Keep it simple and fluid. Telegram style with local discovery is highly effective.", "12:10", false),
         Message("m5", "pavel", "Pavel Durov", "Let me know your thoughts on our TON Wallet Connect SDK update. Looks extremely fast.", "12:15", false)
       )
     ),
     Chat(
-      id = "chat_nexa_announcements",
-      name = "📢 NEXA News & Rewards",
+      id = "chat_tonino_announcements",
+      name = "📢 Tonino News & Rewards",
       lastMessage = "Staking TON is now live with 8.5% APY! 🚀 Click below to verify or share card.",
       lastMessageTime = "Yesterday",
       isOnline = false,
@@ -479,9 +479,9 @@ object MockData {
       isPinned = true,
       isGroup = true,
       messages = listOf(
-        Message("m6", "announcer", "NEXA News", "Welcome to NEXA - The Decentralized Service Messenger!", "May 20", false),
-        Message("m7", "announcer", "NEXA News", "We have partnered with 20 key local services across Europe and Germany.", "June 01", false),
-        Message("m8", "announcer", "NEXA News", "Staking TON is now live with 8.5% APY! 🚀 Click below to verify or share card.", "Yesterday", false)
+        Message("m6", "announcer", "Tonino News", "Welcome to Tonino - The Decentralized Service Messenger!", "May 20", false),
+        Message("m7", "announcer", "Tonino News", "We have partnered with 20 key local services across Europe and Germany.", "June 01", false),
+        Message("m8", "announcer", "Tonino News", "Staking TON is now live with 8.5% APY! 🚀 Click below to verify or share card.", "Yesterday", false)
       )
     ),
     Chat(
@@ -495,7 +495,7 @@ object MockData {
       isGroup = false,
       messages = listOf(
         Message("m9", "user", "Me", "Alex, do you have some TON for gas? I need to test swap logic.", "15:40", true),
-        Message("m10", "cryptokid", "Alex", "Sure thing, sending 2.5 TON right now to your NEXA account! Let me know when it arrives.", "15:42", false),
+        Message("m10", "cryptokid", "Alex", "Sure thing, sending 2.5 TON right now to your Tonino account! Let me know when it arrives.", "15:42", false),
         Message("m11", "cryptokid", "Alex", "Just sent you 2.5 TON. Confirm receipt inside the wallet section!", "15:45", false)
       )
     ),
@@ -509,7 +509,7 @@ object MockData {
       isPinned = false,
       isGroup = true,
       messages = listOf(
-        Message("ms1", "tk", "Tonkeeper Bot", "Connecting to NEXA completed successfully. Address shortened.", "June 10", false),
+        Message("ms1", "tk", "Tonkeeper Bot", "Connecting to Tonino completed successfully. Address shortened.", "June 10", false),
         Message("ms2", "tk", "Tonkeeper Bot", "Tonkeeper connected accounts can now directly stream transactions into custom dApps.", "June 10", false)
       )
     )
@@ -517,13 +517,13 @@ object MockData {
 
   // Initial user settings / profile
   val defaultUser = UserProfile(
-    username = "cosmic_nexian",
+    username = "cosmic_tonino",
     userId = "8618331744", // Belongs to admin user as defined by user requested ADMIN_USER_IDS = ["8618331744"]
     city = "Berlin",
     country = "Germany",
-    referralCode = "NEXA-8618-99X",
+    referralCode = "TONINO-8618-99X",
     invitedCount = 14,
-    rewardsBalance = 425.0, // NEX Points
+    rewardsBalance = 425.0, // TONI Points
     rankLevel = "Platinum"
   )
 }

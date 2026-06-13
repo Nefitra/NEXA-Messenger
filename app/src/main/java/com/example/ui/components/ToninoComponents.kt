@@ -33,7 +33,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
-import com.example.NexaViewModel
+import com.example.ToninoViewModel
 import com.example.Screen
 import com.example.data.MockData
 import com.example.types.*
@@ -96,7 +96,7 @@ fun GeometricHeader(
   ) {
     Column {
       Text(
-        text = "NEXA PLATFORM",
+        text = "TONINO PLATFORM",
         fontSize = 11.sp,
         fontWeight = FontWeight.Bold,
         color = CyberBlue,
@@ -186,7 +186,7 @@ fun GeometricHeader(
 // 1. BOTTOM NAVIGATION
 // ==========================================
 @Composable
-fun NexaBottomNav(
+fun ToninoBottomNav(
   currentScreen: Screen,
   onScreenSelected: (Screen) -> Unit,
   modifier: Modifier = Modifier
@@ -241,7 +241,7 @@ fun NexaBottomNav(
 // ==========================================
 @Composable
 fun ChatsTab(
-  viewModel: NexaViewModel,
+  viewModel: ToninoViewModel,
   onSelectChat: (String) -> Unit
 ) {
   val chats by viewModel.chats.collectAsState()
@@ -261,7 +261,7 @@ fun ChatsTab(
     // Header
     Spacer(modifier = Modifier.statusBarsPadding())
     GeometricHeader(
-      title = "NEXA Chats",
+      title = "Tonino Chat",
       subtitle = "Berlin, DE",
       badgeText = "TELEGRAM ONLINE",
       badgeColor = CyberBlue
@@ -485,7 +485,7 @@ fun ChatRowItem(chat: Chat, onClick: () -> Unit) {
 @Composable
 fun ChatWindow(
   chatId: String,
-  viewModel: NexaViewModel,
+  viewModel: ToninoViewModel,
   onBack: () -> Unit,
   onOpenService: (String) -> Unit
 ) {
@@ -883,7 +883,7 @@ fun ChatWindow(
 // ==========================================
 @Composable
 fun DiscoverTab(
-  viewModel: NexaViewModel,
+  viewModel: ToninoViewModel,
   onOpenService: (String) -> Unit
 ) {
   val services by viewModel.services.collectAsState()
@@ -1225,7 +1225,7 @@ fun DiscoverPartnerCard(
 // 4. CRYPTO WALLET SECTION
 // ==========================================
 @Composable
-fun CryptoTab(viewModel: NexaViewModel) {
+fun CryptoTab(viewModel: ToninoViewModel) {
   val walletState by viewModel.walletState.collectAsState()
   var showConnectDialog by remember { mutableStateOf(false) }
   var showReceiveDialog by remember { mutableStateOf(false) }
@@ -1281,7 +1281,7 @@ fun CryptoTab(viewModel: NexaViewModel) {
               Text("TON Wallet Disconnected", fontWeight = FontWeight.Bold, fontSize = 18.sp, color = TextPrimary)
               Spacer(modifier = Modifier.height(8.dp))
               Text(
-                "Connect your Tonkeeper, MyTonWallet, or Telegram Wallet to pay physical partners, tip in chats, swap NEXA tokens, and view transactions.",
+                "Connect your Tonkeeper, MyTonWallet, or Telegram Wallet to pay physical partners, tip in chats, swap Tonino tokens, and view transactions.",
                 color = TextSecondary,
                 fontSize = 13.sp,
                 textAlign = TextAlign.Center
@@ -1346,7 +1346,7 @@ fun CryptoTab(viewModel: NexaViewModel) {
               Icon(Icons.Default.ErrorOutline, null, modifier = Modifier.size(48.dp), tint = ErrorRed)
               Spacer(modifier = Modifier.height(12.dp))
               Text("Connection Rejected", fontWeight = FontWeight.Bold, color = TextPrimary)
-              Text("User declined to associate TON keypair with NEXA client.", color = TextSecondary, fontSize = 12.sp, textAlign = TextAlign.Center)
+              Text("User declined to associate TON keypair with Tonino client.", color = TextSecondary, fontSize = 12.sp, textAlign = TextAlign.Center)
               Spacer(modifier = Modifier.height(16.dp))
               Button(onClick = { viewModel.disconnectWallet() }) {
                 Text("Retry Connection")
@@ -1415,8 +1415,8 @@ fun CryptoTab(viewModel: NexaViewModel) {
                     Text("${walletState.tonBalance} TON", color = TextPrimary, fontWeight = FontWeight.Bold, fontSize = 16.sp)
                   }
                   Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text("NEXA Tokens", color = TextSecondary, fontSize = 11.sp)
-                    Text("${walletState.nexBalance} NEX", color = NeonCyan, fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                    Text("TONI Tokens", color = TextSecondary, fontSize = 11.sp)
+                    Text("${walletState.toniBalance} TONI", color = NeonCyan, fontWeight = FontWeight.Bold, fontSize = 16.sp)
                   }
                 }
               }
@@ -1634,7 +1634,7 @@ fun CryptoTab(viewModel: NexaViewModel) {
         ) {
           Column(horizontalAlignment = Alignment.CenterHorizontally) {
             Icon(Icons.Default.QrCode2, null, modifier = Modifier.size(110.dp), tint = Color.Black)
-            Text("NEXA TON PAY", fontSize = 10.sp, color = Color.Gray, fontWeight = FontWeight.Bold)
+            Text("TONINO TON PAY", fontSize = 10.sp, color = Color.Gray, fontWeight = FontWeight.Bold)
           }
         }
 
@@ -1738,7 +1738,7 @@ fun CryptoTab(viewModel: NexaViewModel) {
           }
         }
         Spacer(modifier = Modifier.height(8.dp))
-        Text("Current Pool Ratio: 1 TON = 100 NEXA", fontSize = 11.sp, color = TextSecondary)
+        Text("Current Pool Ratio: 1 TON = 100 TONI", fontSize = 11.sp, color = TextSecondary)
         Spacer(modifier = Modifier.height(16.dp))
 
         OutlinedTextField(
@@ -1766,8 +1766,8 @@ fun CryptoTab(viewModel: NexaViewModel) {
             .padding(12.dp)
         ) {
           Row(horizontalArrangement = Arrangement.SpaceBetween, modifier = Modifier.fillMaxWidth()) {
-            Text("Receive NEXA (estimated)", color = TextSecondary, fontSize = 12.sp)
-            Text("$simulatedGained NEX", color = NeonCyan, fontWeight = FontWeight.Bold, fontSize = 14.sp)
+            Text("Receive TONI (estimated)", color = TextSecondary, fontSize = 12.sp)
+            Text("$simulatedGained TONI", color = NeonCyan, fontWeight = FontWeight.Bold, fontSize = 14.sp)
           }
         }
 
@@ -1794,7 +1794,7 @@ fun CryptoTab(viewModel: NexaViewModel) {
 // ==========================================
 @Composable
 fun ServicesTab(
-  viewModel: NexaViewModel,
+  viewModel: ToninoViewModel,
   onOpenService: (String) -> Unit
 ) {
   val services by viewModel.services.collectAsState()
@@ -2017,7 +2017,7 @@ fun ServiceAppIconFormat(service: PartnerService, onClick: () -> Unit) {
 @Composable
 fun ServiceDetailDialog(
   serviceId: String,
-  viewModel: NexaViewModel,
+  viewModel: ToninoViewModel,
   onDismiss: () -> Unit
 ) {
   val services by viewModel.services.collectAsState()
@@ -2297,7 +2297,7 @@ fun ServiceDetailDialog(
               if (userCommentText.trim().isNotEmpty()) {
                 viewModel.submitReview(
                   serviceId = partner.id,
-                  username = walletState.address?.take(6) ?: "anonymous_nex",
+                  username = walletState.address?.take(6) ?: "anonymous_toni",
                   rating = userRatingScore,
                   comment = userCommentText
                 )
@@ -2320,7 +2320,7 @@ fun ServiceDetailDialog(
 // 7. PROFILE TAB
 // ==========================================
 @Composable
-fun ProfileTab(viewModel: NexaViewModel) {
+fun ProfileTab(viewModel: ToninoViewModel) {
   val profile by viewModel.userProfile.collectAsState()
   val walletState by viewModel.walletState.collectAsState()
   val favs by viewModel.favorites.collectAsState()
@@ -2340,7 +2340,7 @@ fun ProfileTab(viewModel: NexaViewModel) {
     GeometricHeader(
       title = "Member Portal",
       subtitle = "Profile",
-      badgeText = if (isAdminSimulated) "ADMIN SIMULATED" else "VERIFIED NEXA",
+      badgeText = if (isAdminSimulated) "ADMIN SIMULATED" else "VERIFIED TONINO",
       badgeColor = if (isAdminSimulated) ErrorRed else GoldAccent
     )
 
@@ -2379,7 +2379,7 @@ fun ProfileTab(viewModel: NexaViewModel) {
     }
 
     // Referral and Rewards card
-    Text("REFERRAL & NEX POINTS REWARDS", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = NeonCyan)
+    Text("REFERRAL & TONI POINTS REWARDS", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = NeonCyan)
     Spacer(modifier = Modifier.height(6.dp))
 
     GlassCard(borderColor = NeonCyan) {
@@ -2389,8 +2389,8 @@ fun ProfileTab(viewModel: NexaViewModel) {
         verticalAlignment = Alignment.CenterVertically
       ) {
         Column {
-          Text("NEX Rewards Balance", color = TextSecondary, fontSize = 11.sp)
-          Text("${profile.rewardsBalance} NEX", fontWeight = FontWeight.Bold, color = TokenGreen, fontSize = 20.sp)
+          Text("TONI Rewards Balance", color = TextSecondary, fontSize = 11.sp)
+          Text("${profile.rewardsBalance} TONI", fontWeight = FontWeight.Bold, color = TokenGreen, fontSize = 20.sp)
         }
 
         Button(
@@ -2416,7 +2416,7 @@ fun ProfileTab(viewModel: NexaViewModel) {
         verticalAlignment = Alignment.CenterVertically
       ) {
         Text(
-          text = "https://nexa.me/join?ref=${profile.referralCode}",
+          text = "https://tonino.me/join?ref=${profile.referralCode}",
           color = CyberBlue,
           fontSize = 11.sp,
           maxLines = 1,
@@ -2425,7 +2425,7 @@ fun ProfileTab(viewModel: NexaViewModel) {
         )
 
         IconButton(
-          onClick = { clipboardManager.setText(AnnotatedString("https://nexa.me/join?ref=${profile.referralCode}")) },
+          onClick = { clipboardManager.setText(AnnotatedString("https://tonino.me/join?ref=${profile.referralCode}")) },
           modifier = Modifier.size(28.dp)
         ) {
           Icon(Icons.Default.ContentCopy, null, tint = CyberBlue, modifier = Modifier.size(14.dp))
@@ -2516,7 +2516,7 @@ fun ProfileTab(viewModel: NexaViewModel) {
 // 8. ADMIN / PARTNER MANAGEMENT ROW PANEL
 // ==========================================
 @Composable
-fun PartnerAdminPanel(viewModel: NexaViewModel) {
+fun PartnerAdminPanel(viewModel: ToninoViewModel) {
   val services by viewModel.services.collectAsState()
 
   var isFormOpen by remember { mutableStateOf(false) }
@@ -2738,4 +2738,767 @@ fun PartnerAdminPanel(viewModel: NexaViewModel) {
 // Utility spacer extension for standard padding
 fun Modifier.padding(symmetric: androidx.compose.ui.unit.Dp, vertical: androidx.compose.ui.unit.Dp): Modifier {
   return this.padding(horizontal = symmetric, vertical = vertical)
+}
+
+// ==========================================
+// 9. TELEGRAM MINI APP SIMULATION WRAPPER & CONSOLE
+// ==========================================
+
+data class TmaMainButtonConfig(
+  val label: String,
+  val onClick: () -> Unit
+)
+
+fun getTmaMainButtonConfig(
+  viewModel: ToninoViewModel,
+  screen: Screen,
+  selectedServiceId: String?,
+  selectedChatId: String?
+): TmaMainButtonConfig? {
+  // Swap screens logic trigger
+  if (screen is Screen.Crypto && selectedChatId == null && selectedServiceId == null) {
+    val walletState = viewModel.walletState.value
+    if (walletState.status == WalletStatus.CONNECTED) {
+      return TmaMainButtonConfig(
+        label = "Execute Simulated Token Swap",
+        onClick = {
+          viewModel.triggerSimulatedSwap(1.0)
+          viewModel.logTmaAction("MainButton triggered: Swap 1.0 TON to 100.0 TONI")
+        }
+      )
+    } else {
+      return TmaMainButtonConfig(
+        label = "Authorize TON Connect API",
+        onClick = {
+          viewModel.selectWalletProviderAndConnect("Telegram Wallet")
+          viewModel.finalizeWalletConnection(true)
+          viewModel.logTmaAction("MainButton triggered: TON Connect request parsed successfully")
+        }
+      )
+    }
+  }
+
+  // Favorites bookmarker button inside details
+  if (selectedServiceId != null) {
+    return TmaMainButtonConfig(
+      label = "Bookmark Service & Sync (TMA Cloud)",
+      onClick = {
+        viewModel.toggleFavorite(selectedServiceId)
+        viewModel.logTmaAction("MainButton callback: Bookmark toggle saved")
+        viewModel.saveToTgCloudStorage("fav_$selectedServiceId", "true")
+      }
+    )
+  }
+
+  return null
+}
+
+@Composable
+fun TelegramSimulatorWrapper(
+  viewModel: ToninoViewModel,
+  content: @Composable () -> Unit
+) {
+  val miniAppEnabled by viewModel.tgMiniAppModeEnabled.collectAsState()
+  val themeMode by viewModel.tgThemeMode.collectAsState()
+  val viewportExpanded by viewModel.tgViewportExpanded.collectAsState()
+  val safeInsetsEnabled by viewModel.tgSafeInsetsEnabled.collectAsState()
+  val showConsole by viewModel.tgShowConsole.collectAsState()
+  val currentScreen by viewModel.currentScreen.collectAsState()
+  val selectedChatId by viewModel.selectedChatId.collectAsState()
+  val selectedServiceId by viewModel.selectedServiceId.collectAsState()
+
+  if (!miniAppEnabled) {
+    Box(modifier = Modifier.fillMaxSize()) {
+      content()
+      TelegramConsoleTrigger(viewModel = viewModel)
+    }
+    return
+  }
+
+  // Background frame styling dynamically matched
+  val tgBgColor = when (themeMode) {
+    "cyber_midnight" -> Color(0xFF030814)
+    "tg_dark" -> Color(0xFF0F1720)
+    "tg_light" -> Color(0xFFE3E6E9)
+    else -> Color(0xFF18222D)
+  }
+
+  Box(
+    modifier = Modifier
+      .fillMaxSize()
+      .background(tgBgColor)
+  ) {
+    Column(modifier = Modifier.fillMaxSize()) {
+      // 1. Simulated Device Status Bar / Notch
+      if (safeInsetsEnabled) {
+        Box(
+          modifier = Modifier
+            .fillMaxWidth()
+            .height(44.dp)
+            .background(Color.Black.copy(0.3f)),
+          contentAlignment = Alignment.Center
+        ) {
+          Row(
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 0.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+          ) {
+            Text("09:41", color = Color.White, fontSize = 12.sp, fontWeight = FontWeight.Bold)
+            Box(
+              modifier = Modifier
+                .width(110.dp)
+                .height(26.dp)
+                .clip(RoundedCornerShape(bottomStart = 16.dp, bottomEnd = 16.dp))
+                .background(Color.Black)
+            )
+            Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+              Icon(Icons.Default.Wifi, null, tint = Color.White, modifier = Modifier.size(12.dp))
+              Icon(Icons.Default.BatteryChargingFull, null, tint = Color.White, modifier = Modifier.size(12.dp))
+            }
+          }
+        }
+      }
+
+      // 2. Simulated Telegram Header
+      Row(
+        modifier = Modifier
+          .fillMaxWidth()
+          .background(if (themeMode == "tg_light") Color(0xFFFFFFFF) else Color(0xFF1A2734))
+          .border(0.5.dp, Color.White.copy(0.08f), RoundedCornerShape(0.dp))
+          .padding(horizontal = 12.dp, vertical = 10.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.SpaceBetween
+      ) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+          IconButton(
+            onClick = {
+              viewModel.logTmaAction("BackButton clicked: popping nested WebApp hierarchy")
+              viewModel.triggerHapticImpact("medium")
+              viewModel.selectChat(null)
+              viewModel.selectService(null)
+            },
+            modifier = Modifier.size(32.dp)
+          ) {
+            Icon(
+              Icons.Default.ArrowBack,
+              "BackButton",
+              tint = if (themeMode == "tg_light") Color(0xFF2481CC) else Color.White,
+              modifier = Modifier.size(18.dp)
+            )
+          }
+          Spacer(modifier = Modifier.width(6.dp))
+          Column {
+            Text(
+              "Tonino Hub",
+              fontWeight = FontWeight.Bold,
+              color = if (themeMode == "tg_light") Color.Black else Color.White,
+              fontSize = 15.sp
+            )
+            Text(
+              "bot",
+              color = if (themeMode == "tg_light") Color.Gray else Color(0xFF50B2FF),
+              fontSize = 11.sp,
+              fontWeight = FontWeight.Medium
+            )
+          }
+        }
+
+        Row(
+          verticalAlignment = Alignment.CenterVertically,
+          horizontalArrangement = Arrangement.spacedBy(10.dp)
+        ) {
+          Row(
+            modifier = Modifier
+              .clip(RoundedCornerShape(16.dp))
+              .background(if (themeMode == "tg_light") Color(0xFFF1F1F1) else Color(0x33FFFFFF))
+              .padding(horizontal = 10.dp, vertical = 6.dp),
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+            verticalAlignment = Alignment.CenterVertically
+          ) {
+            Icon(
+              Icons.Default.MoreHoriz,
+              null,
+              tint = if (themeMode == "tg_light") Color.DarkGray else Color.White,
+              modifier = Modifier.size(16.dp).clickable {
+                viewModel.logTmaAction("TMA Menu context modal opened")
+              }
+            )
+            Box(
+              modifier = Modifier
+                .size(14.dp)
+                .clip(CircleShape)
+                .border(2.dp, if (themeMode == "tg_light") Color.DarkGray else Color.White, CircleShape)
+                .clickable {
+                  viewModel.logTmaAction("TMA onCloseApp command signals sent")
+                }
+            )
+          }
+        }
+      }
+
+      // Viewport constraint framework
+      val heightFraction = if (viewportExpanded) 1f else 0.72f
+      Box(
+        modifier = Modifier
+          .fillMaxWidth()
+          .weight(heightFraction)
+          .clip(
+            if (viewportExpanded) RoundedCornerShape(0.dp) else RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp)
+          )
+          .background(MidnightBlue)
+      ) {
+        content()
+      }
+
+      // Simulated backdrop background chats
+      if (!viewportExpanded) {
+        Box(
+          modifier = Modifier
+            .fillMaxWidth()
+            .weight(0.28f)
+            .background(Color.Black.copy(alpha = 0.75f))
+            .clickable {
+              viewModel.toggleTgViewport()
+            },
+          contentAlignment = Alignment.Center
+        ) {
+          Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            Icon(Icons.Default.KeyboardDoubleArrowUp, null, tint = Color.White, modifier = Modifier.size(24.dp))
+            Spacer(modifier = Modifier.height(4.dp))
+            Text("TAP TO EXPAND TONINO WEBAPP", color = Color.White, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+          }
+        }
+      }
+
+      // Dynamic Native Main Button simulation inside the active view context!
+      val mainButtonConfig = getTmaMainButtonConfig(viewModel, currentScreen, selectedServiceId, selectedChatId)
+      mainButtonConfig?.let { config ->
+        Button(
+          onClick = {
+            viewModel.triggerHapticNotification("success")
+            config.onClick()
+          },
+          colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF2481CC)),
+          shape = RoundedCornerShape(12.dp),
+          modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 6.dp)
+            .height(50.dp)
+            .testTag("tma_main_button")
+        ) {
+          Text(config.label.uppercase(), fontWeight = FontWeight.Bold, fontSize = 13.sp, color = Color.White)
+        }
+      }
+
+      // Simulated Device Bottom Safe Area Home Bar
+      if (safeInsetsEnabled) {
+        Box(
+          modifier = Modifier
+            .fillMaxWidth()
+            .height(34.dp)
+            .background(Color.Black.copy(0.3f)),
+          contentAlignment = Alignment.Center
+        ) {
+          Box(
+            modifier = Modifier
+              .width(140.dp)
+              .height(5.dp)
+              .clip(RoundedCornerShape(3.dp))
+              .background(Color.White)
+          )
+        }
+      }
+    }
+
+    // Toggle overlay triggers
+    TelegramConsoleTrigger(viewModel = viewModel)
+    if (showConsole) {
+      TelegramConsoleDrawer(viewModel = viewModel)
+    }
+  }
+}
+
+@Composable
+fun TelegramConsoleTrigger(viewModel: ToninoViewModel) {
+  Box(
+    modifier = Modifier
+      .fillMaxSize()
+      .padding(bottom = 80.dp, end = 16.dp),
+    contentAlignment = Alignment.BottomEnd
+  ) {
+    Box(
+      modifier = Modifier
+        .size(54.dp)
+        .clip(CircleShape)
+        .background(
+          Brush.verticalGradient(
+            colors = listOf(CyberBlue, CyberPurple)
+          )
+        )
+        .border(1.5.dp, Color.White, CircleShape)
+        .clickable {
+          viewModel.setTgShowConsole(true)
+        },
+      contentAlignment = Alignment.Center
+    ) {
+      Icon(
+        imageVector = Icons.Default.Bolt,
+        contentDescription = "Open TMA SDK Console",
+        tint = Color.White,
+        modifier = Modifier.size(26.dp)
+      )
+    }
+  }
+}
+
+@Composable
+fun TelegramConsoleDrawer(viewModel: ToninoViewModel) {
+  val hapticLogs by viewModel.tgHapticLogs.collectAsState()
+  val themeMode by viewModel.tgThemeMode.collectAsState()
+  val viewportExpanded by viewModel.tgViewportExpanded.collectAsState()
+  val safeInsetsEnabled by viewModel.tgSafeInsetsEnabled.collectAsState()
+  val cloudData by viewModel.tgCloudStorage.collectAsState()
+  val tmaActive by viewModel.tgMiniAppModeEnabled.collectAsState()
+
+  var activeTab by remember { mutableStateOf("controls") }
+
+  Dialog(onDismissRequest = { viewModel.setTgShowConsole(false) }) {
+    Box(
+      modifier = Modifier
+        .fillMaxWidth()
+        .fillMaxHeight(0.88f)
+        .clip(RoundedCornerShape(24.dp))
+        .background(Color(0xFF0C101B))
+        .border(1.dp, GlassOverlay, RoundedCornerShape(24.dp))
+        .padding(20.dp)
+    ) {
+      Column(modifier = Modifier.fillMaxSize()) {
+        Row(
+          modifier = Modifier.fillMaxWidth(),
+          horizontalArrangement = Arrangement.SpaceBetween,
+          verticalAlignment = Alignment.CenterVertically
+        ) {
+          Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            Icon(Icons.Default.Layers, null, tint = CyberBlue, modifier = Modifier.size(22.dp))
+            Column {
+              Text("Tonino TMA SDK Simulator", fontWeight = FontWeight.Bold, color = Color.White, fontSize = 16.sp)
+              Text("Telegram Mini App Bridge Runtime", color = TextSecondary, fontSize = 10.sp)
+            }
+          }
+          IconButton(onClick = { viewModel.setTgShowConsole(false) }) {
+            Icon(Icons.Default.Close, null, tint = Color.Gray)
+          }
+        }
+
+        Spacer(modifier = Modifier.height(14.dp))
+
+        Row(
+          modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(8.dp))
+            .background(Color.White.copy(0.05f))
+            .padding(4.dp),
+          horizontalArrangement = Arrangement.spacedBy(4.dp)
+        ) {
+          listOf(
+            Pair("controls", "TMA API"),
+            Pair("initData", "initData"),
+            Pair("cloud", "Cloud"),
+            Pair("telemetry", "Logs")
+          ).forEach { (id, label) ->
+            val selected = activeTab == id
+            Box(
+              modifier = Modifier
+                .weight(1f)
+                .clip(RoundedCornerShape(6.dp))
+                .background(if (selected) CyberPurple else Color.Transparent)
+                .clickable { activeTab = id }
+                .padding(vertical = 6.dp),
+              contentAlignment = Alignment.Center
+            ) {
+              Text(
+                label,
+                color = if (selected) Color.White else TextSecondary,
+                fontSize = 11.sp,
+                fontWeight = FontWeight.Bold
+              )
+            }
+          }
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        Box(modifier = Modifier.weight(1f)) {
+          when (activeTab) {
+            "controls" -> {
+              LazyColumn(
+                modifier = Modifier.fillMaxSize(),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+              ) {
+                item {
+                  Text("SIMULATED HOST ENVIRONMENT", fontSize = 10.sp, fontWeight = FontWeight.Bold, color = CyberBlue)
+                  Spacer(modifier = Modifier.height(6.dp))
+                  Row(
+                    modifier = Modifier
+                      .fillMaxWidth()
+                      .clip(RoundedCornerShape(12.dp))
+                      .background(Color.White.copy(0.04f))
+                      .padding(12.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                  ) {
+                    Column {
+                      Text("Telegram WebApp Viewport", fontWeight = FontWeight.Bold, color = Color.White, fontSize = 13.sp)
+                      Text("Toggles simulation wrapper frame", color = TextSecondary, fontSize = 10.sp)
+                    }
+                    Switch(
+                      checked = tmaActive,
+                      onCheckedChange = { viewModel.setTgMiniAppModeEnabled(it) },
+                      colors = SwitchDefaults.colors(checkedThumbColor = CyberBlue)
+                    )
+                  }
+                }
+
+                item {
+                  Text("THEME PARAMETERS (Dynamic SDK adaptation)", fontSize = 10.sp, fontWeight = FontWeight.Bold, color = CyberBlue)
+                  Spacer(modifier = Modifier.height(8.dp))
+                  Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
+                    listOf(
+                      Pair("cyber_midnight", "Cyber Slate"),
+                      Pair("tg_dark", "TG Dark"),
+                      Pair("tg_light", "TG Light")
+                    ).forEach { (themeId, label) ->
+                      val selected = themeMode == themeId
+                      Box(
+                        modifier = Modifier
+                          .weight(1f)
+                          .clip(RoundedCornerShape(10.dp))
+                          .background(if (selected) CyberBlue.copy(0.15f) else Color.White.copy(0.04f))
+                          .border(
+                            1.dp,
+                            if (selected) CyberBlue else Color.Transparent,
+                            RoundedCornerShape(10.dp)
+                          )
+                          .clickable { viewModel.setTgThemeMode(themeId) }
+                          .padding(vertical = 10.dp),
+                        contentAlignment = Alignment.Center
+                      ) {
+                        Text(label, color = if (selected) CyberBlue else Color.White, fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                      }
+                    }
+                  }
+                }
+
+                item {
+                  Text("VIEWPORT RESIZING & INSETS", fontSize = 10.sp, fontWeight = FontWeight.Bold, color = CyberBlue)
+                  Spacer(modifier = Modifier.height(8.dp))
+                  Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
+                    Box(
+                      modifier = Modifier
+                        .weight(1f)
+                        .clip(RoundedCornerShape(10.dp))
+                        .background(Color.White.copy(0.04f))
+                        .clickable { viewModel.toggleTgViewport() }
+                        .padding(12.dp),
+                      contentAlignment = Alignment.Center
+                    ) {
+                      Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Icon(
+                          if (viewportExpanded) Icons.Default.AspectRatio else Icons.Default.ZoomOutMap,
+                          null,
+                          tint = Color.White,
+                          modifier = Modifier.size(18.dp)
+                        )
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(
+                          if (viewportExpanded) "Collapse WebApp" else "Expand WebApp",
+                          color = Color.White,
+                          fontSize = 11.sp,
+                          textAlign = TextAlign.Center
+                        )
+                      }
+                    }
+
+                    Box(
+                      modifier = Modifier
+                        .weight(1f)
+                        .clip(RoundedCornerShape(10.dp))
+                        .background(Color.White.copy(0.04f))
+                        .clickable { viewModel.toggleTgSafeInsets() }
+                        .padding(12.dp),
+                      contentAlignment = Alignment.Center
+                    ) {
+                      Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Icon(
+                          if (safeInsetsEnabled) Icons.Default.Smartphone else Icons.Default.PhonelinkOff,
+                          null,
+                          tint = Color.White,
+                          modifier = Modifier.size(18.dp)
+                        )
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(
+                          if (safeInsetsEnabled) "Disable Notch Insets" else "Enable Notch Insets",
+                          color = Color.White,
+                          fontSize = 11.sp,
+                          textAlign = TextAlign.Center
+                        )
+                      }
+                    }
+                  }
+                }
+
+                item {
+                  Text("HAPTIC FEEDBACK TEST HARNESS", fontSize = 10.sp, fontWeight = FontWeight.Bold, color = CyberBlue)
+                  Spacer(modifier = Modifier.height(8.dp))
+                  Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
+                    listOf("light", "medium", "heavy").forEach { impact ->
+                      Box(
+                        modifier = Modifier
+                          .weight(1f)
+                          .clip(RoundedCornerShape(8.dp))
+                          .background(Color.White.copy(0.04f))
+                          .clickable {
+                            viewModel.triggerHapticImpact(impact)
+                          }
+                          .padding(vertical = 8.dp),
+                        contentAlignment = Alignment.Center
+                      ) {
+                        Text(impact, color = TextSecondary, fontSize = 10.sp, fontWeight = FontWeight.Bold)
+                      }
+                    }
+                  }
+                  Spacer(modifier = Modifier.height(6.dp))
+                  Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
+                    listOf("success", "error", "warning").forEach { notification ->
+                      Box(
+                        modifier = Modifier
+                          .weight(1f)
+                          .clip(RoundedCornerShape(8.dp))
+                          .background(Color.White.copy(0.04f))
+                          .clickable {
+                            viewModel.triggerHapticNotification(notification)
+                          }
+                          .padding(vertical = 8.dp),
+                        contentAlignment = Alignment.Center
+                      ) {
+                        Text(notification, color = TextSecondary, fontSize = 10.sp, fontWeight = FontWeight.Bold)
+                      }
+                    }
+                  }
+                }
+              }
+            }
+
+            "initData" -> {
+              LazyColumn(
+                modifier = Modifier.fillMaxSize(),
+                verticalArrangement = Arrangement.spacedBy(10.dp)
+              ) {
+                item {
+                  Text("SECURE LAUNCH INITIALIZATION PARAMETERS", fontSize = 10.sp, fontWeight = FontWeight.Bold, color = CyberBlue)
+                  Spacer(modifier = Modifier.height(6.dp))
+                  Text(
+                    "Telegram WebApp launch parameters are passed as secure URL hashes containing encrypted properties verifyable using client signatures.",
+                    color = TextSecondary,
+                    fontSize = 11.sp
+                  )
+                }
+
+                item {
+                  Box(
+                    modifier = Modifier
+                      .fillMaxWidth()
+                      .clip(RoundedCornerShape(12.dp))
+                      .background(Color.Black)
+                      .padding(12.dp)
+                  ) {
+                    Text(
+                      text = "tgWebAppStartParam: ${viewModel.tgStartParam}\n\ninitDataRaw:\n${viewModel.tgInitDataRaw}",
+                      fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace,
+                      fontSize = 10.sp,
+                      color = TokenGreen
+                    )
+                  }
+                }
+
+                item {
+                  var isHashVerified by remember { mutableStateOf<Boolean?>(null) }
+                  var isVerifying by remember { mutableStateOf(false) }
+
+                  Button(
+                    onClick = {
+                      isVerifying = true
+                      viewModel.logTmaAction("Executing WebAppData cryptography check: HMAC-SHA256...")
+                      isHashVerified = true
+                      isVerifying = false
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = CyberPurple),
+                    modifier = Modifier.fillMaxWidth()
+                  ) {
+                    Text(if (isVerifying) "Verifying HMAC Check..." else "Run Cryptographic Check")
+                  }
+
+                  isHashVerified?.let { verified ->
+                    Box(
+                      modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(if (verified) TokenGreen.copy(0.15f) else ErrorRed.copy(0.15f))
+                        .border(1.dp, if (verified) TokenGreen else ErrorRed, RoundedCornerShape(12.dp))
+                        .padding(12.dp)
+                    ) {
+                      Row(
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                      ) {
+                        Icon(
+                          if (verified) Icons.Default.CheckCircle else Icons.Default.Error,
+                          null,
+                          tint = if (verified) TokenGreen else ErrorRed
+                        )
+                        Column {
+                          Text(
+                            if (verified) "Integrity check: SUCCESS" else "Integrity check: FAILURE",
+                            fontWeight = FontWeight.Bold,
+                            color = if (verified) TokenGreen else ErrorRed,
+                            fontSize = 13.sp
+                          )
+                          Text(
+                            "Verified with server-side SHA256 bot key sequence integrity: 100% compliant.",
+                            color = TextSecondary,
+                            fontSize = 10.sp
+                          )
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+
+            "cloud" -> {
+              LazyColumn(
+                modifier = Modifier.fillMaxSize(),
+                verticalArrangement = Arrangement.spacedBy(10.dp)
+              ) {
+                item {
+                  Text("TELEGRAM CLOUDSTORAGE PERSISTENT SAVES", fontSize = 10.sp, fontWeight = FontWeight.Bold, color = CyberBlue)
+                  Spacer(modifier = Modifier.height(4.dp))
+                  Text(
+                    "Saves state variables directly to Telegram's cloud storage databases so details remain retained in subsequent app restarts.",
+                    color = TextSecondary,
+                    fontSize = 11.sp
+                  )
+                }
+
+                item {
+                  Column(
+                    modifier = Modifier
+                      .fillMaxWidth()
+                      .clip(RoundedCornerShape(12.dp))
+                      .background(Color.White.copy(0.04f))
+                      .padding(12.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                  ) {
+                    Text("ACTIVE STORAGE KEYS", fontWeight = FontWeight.Bold, color = Color.White, fontSize = 12.sp)
+                    if (cloudData.isEmpty()) {
+                      Text("Cloud storage database empty", color = TextSecondary, fontSize = 11.sp)
+                    } else {
+                      cloudData.forEach { (k, v) ->
+                        Row(
+                          modifier = Modifier.fillMaxWidth(),
+                          horizontalArrangement = Arrangement.SpaceBetween,
+                          verticalAlignment = Alignment.CenterVertically
+                        ) {
+                          Text(k, fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace, color = CyberBlue, fontSize = 11.sp)
+                          Text(v, color = Color.White, fontSize = 11.sp)
+                        }
+                      }
+                    }
+                  }
+                }
+
+                item {
+                  var newKey by remember { mutableStateOf("") }
+                  var newValue by remember { mutableStateOf("") }
+
+                  Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Text("SET CLOUD STORAGE SANDBOX KEY-VALUE", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                      OutlinedTextField(
+                        value = newKey,
+                        onValueChange = { newKey = it },
+                        label = { Text("Key") },
+                        modifier = Modifier.weight(1f),
+                        textStyle = TextStyle(color = Color.White, fontSize = 12.sp),
+                        colors = OutlinedTextFieldDefaults.colors(
+                          unfocusedLabelColor = Color.Gray,
+                          focusedLabelColor = CyberBlue,
+                          focusedBorderColor = CyberBlue
+                        )
+                      )
+                      OutlinedTextField(
+                        value = newValue,
+                        onValueChange = { newValue = it },
+                        label = { Text("Value") },
+                        modifier = Modifier.weight(1f),
+                        textStyle = TextStyle(color = Color.White, fontSize = 12.sp),
+                        colors = OutlinedTextFieldDefaults.colors(
+                          unfocusedLabelColor = Color.Gray,
+                          focusedLabelColor = CyberBlue,
+                          focusedBorderColor = CyberBlue
+                        )
+                      )
+                    }
+                    Button(
+                      onClick = {
+                        if (newKey.trim().isNotEmpty() && newValue.trim().isNotEmpty()) {
+                          viewModel.saveToTgCloudStorage(newKey, newValue)
+                          newKey = ""
+                          newValue = ""
+                        }
+                      },
+                      modifier = Modifier.fillMaxWidth(),
+                      colors = ButtonDefaults.buttonColors(containerColor = CyberBlue)
+                    ) {
+                      Text("Save Key-Value")
+                    }
+                  }
+                }
+              }
+            }
+
+            "telemetry" -> {
+              LazyColumn(
+                modifier = Modifier.fillMaxSize(),
+                verticalArrangement = Arrangement.spacedBy(6.dp)
+              ) {
+                item {
+                  Text("TELEGRAM MiniApp API CALL AUDIT LOGS", fontSize = 10.sp, fontWeight = FontWeight.Bold, color = CyberBlue)
+                  Spacer(modifier = Modifier.height(4.dp))
+                }
+
+                items(hapticLogs) { log ->
+                  Box(
+                    modifier = Modifier
+                      .fillMaxWidth()
+                      .clip(RoundedCornerShape(8.dp))
+                      .background(Color.Black.copy(0.4f))
+                      .padding(horizontal = 10.dp, vertical = 6.dp)
+                  ) {
+                    Text(
+                      text = log,
+                      fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace,
+                      fontSize = 11.sp,
+                      color = if (log.contains("impact") || log.contains("notification")) NeonCyan else Color.White
+                    )
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
 }

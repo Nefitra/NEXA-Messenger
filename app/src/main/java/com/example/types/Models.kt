@@ -82,7 +82,7 @@ data class WalletState(
   val walletType: String? = null, // "Tonkeeper" | "MyTonWallet" | "Telegram" | "WalletConnect"
   val address: String? = null,
   val tonBalance: Double = 0.0,
-  val nexBalance: Double = 0.0, // Internal platform token NEX token
+  val toniBalance: Double = 0.0, // Internal platform token TONI token
   val portfolioValueUsd: Double = 0.0,
   val txHistory: List<WalletTx> = emptyList()
 )
@@ -95,7 +95,7 @@ data class UserProfile(
   val country: String,
   val referralCode: String,
   val invitedCount: Int,
-  val rewardsBalance: Double, // NEX points/tokens
+  val rewardsBalance: Double, // TONI points/tokens
   val rankLevel: String, // Bronze, Silver, Gold, Platinum, Obsidian
   val originalInviterId: String? = null
 )

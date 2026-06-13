@@ -17,7 +17,77 @@ sealed class Screen {
   object Profile : Screen()
 }
 
-class NexaViewModel : ViewModel() {
+class ToninoViewModel : ViewModel() {
+
+  // ==========================================
+  // TELEGRAM MINI APP (TMA) SIMULATION ENGINE
+  // ==========================================
+  private val _tgMiniAppModeEnabled = MutableStateFlow<Boolean>(true)
+  val tgMiniAppModeEnabled: StateFlow<Boolean> = _tgMiniAppModeEnabled.asStateFlow()
+
+  private val _tgThemeMode = MutableStateFlow<String>("cyber_midnight") // "cyber_midnight" | "tg_dark" | "tg_light"
+  val tgThemeMode: StateFlow<String> = _tgThemeMode.asStateFlow()
+
+  private val _tgViewportExpanded = MutableStateFlow<Boolean>(true)
+  val tgViewportExpanded: StateFlow<Boolean> = _tgViewportExpanded.asStateFlow()
+
+  private val _tgSafeInsetsEnabled = MutableStateFlow<Boolean>(true)
+  val tgSafeInsetsEnabled: StateFlow<Boolean> = _tgSafeInsetsEnabled.asStateFlow()
+
+  private val _tgHapticLogs = MutableStateFlow<List<String>>(listOf("TMA Engine initialized: telegram-web-app.js (v7.0)"))
+  val tgHapticLogs: StateFlow<List<String>> = _tgHapticLogs.asStateFlow()
+
+  private val _tgCloudStorage = MutableStateFlow<Map<String, String>>(mapOf("user_pref_theme" to "cyber_midnight"))
+  val tgCloudStorage: StateFlow<Map<String, String>> = _tgCloudStorage.asStateFlow()
+
+  private val _tgShowConsole = MutableStateFlow<Boolean>(false)
+  val tgShowConsole: StateFlow<Boolean> = _tgShowConsole.asStateFlow()
+
+  val tgInitDataRaw = "query_id=AAH4MH0IAwAAAPgwfQgD&user=%7B%22id%22%3A8618331744%2C%22first_name%22%3A%22Boris%22%2C%22last_name%22%3A%22%22%2C%22username%22%3A%22cosmic_tonino%22%2C%22language_code%22%3A%22de%22%2C%22is_premium%22%3Atrue%2C%22allows_write_to_pm%22%3Atrue%7D&auth_date=1718306000&hash=f5be077f19b22e11e8a9fac359487c6ca7e94e775f0a06bd4f2f01fbf9dfbe42"
+  val tgStartParam = "ref_8618331744"
+
+  fun setTgMiniAppModeEnabled(enabled: Boolean) {
+    _tgMiniAppModeEnabled.value = enabled
+    logTmaAction("TMA Mode: ${if (enabled) "ENABLED" else "DISABLED"}")
+  }
+
+  fun setTgThemeMode(mode: String) {
+    _tgThemeMode.value = mode
+    logTmaAction("Theme changed callback: '$mode'")
+    saveToTgCloudStorage("user_pref_theme", mode)
+  }
+
+  fun toggleTgViewport() {
+    _tgViewportExpanded.value = !_tgViewportExpanded.value
+    logTmaAction("Viewport: ${_tgViewportExpanded.value.let { if (it) "Expanded (100% height)" else "Minimized (70% height)" }}")
+    triggerHapticImpact("medium")
+  }
+
+  fun toggleTgSafeInsets() {
+    _tgSafeInsetsEnabled.value = !_tgSafeInsetsEnabled.value
+    logTmaAction("Safe-area insets: ${_tgSafeInsetsEnabled.value.let { if (it) "BOUNDS_NOTCH (Active)" else "BOUNDS_FLAT (Raw)" }}")
+  }
+
+  fun setTgShowConsole(visible: Boolean) {
+    _tgShowConsole.value = visible
+  }
+
+  fun logTmaAction(message: String) {
+    _tgHapticLogs.update { (listOf("[${java.text.SimpleDateFormat("HH:mm:ss", java.util.Locale.getDefault()).format(java.util.Date())}] $message") + it).take(30) }
+  }
+
+  fun triggerHapticImpact(style: String) {
+    logTmaAction("WebApp.HapticFeedback.impactOccurred('$style')")
+  }
+
+  fun triggerHapticNotification(type: String) {
+    logTmaAction("WebApp.HapticFeedback.notificationOccurred('$type')")
+  }
+
+  fun saveToTgCloudStorage(key: String, value: String) {
+    _tgCloudStorage.update { it + (key to value) }
+    logTmaAction("WebApp.CloudStorage.setItem('$key', '$value')")
+  }
 
   // Current Screen State
   private val _currentScreen = MutableStateFlow<Screen>(Screen.Chats)
@@ -182,7 +252,7 @@ class NexaViewModel : ViewModel() {
       val mockAddress = "EQC4...9nZ_PX"
       val mockTxs = listOf(
         WalletTx("tx_1", "Receive", 2.5, "TON", "EQB3...q2xL", "Today", "15:45"),
-        WalletTx("tx_2", "Swap", 10.0, "TON -> 400 NEXA", "NEXA Swap", "Yesterday", "10:14"),
+        WalletTx("tx_2", "Swap", 10.0, "TON -> 400 TONI", "Tonino Swap", "Yesterday", "10:14"),
         WalletTx("tx_3", "Send", 1.2, "TON", "EQF0...a_3D", "June 10", "18:22")
       )
       _walletState.update {
@@ -190,7 +260,7 @@ class NexaViewModel : ViewModel() {
           status = WalletStatus.CONNECTED,
           address = mockAddress,
           tonBalance = 15.68,
-          nexBalance = 1250.0,
+          toniBalance = 1250.0,
           portfolioValueUsd = 142.50,
           txHistory = mockTxs
         )
@@ -231,14 +301,14 @@ class NexaViewModel : ViewModel() {
   fun triggerSimulatedSwap(tonAmount: Double) {
     val current = _walletState.value
     if (current.status != WalletStatus.CONNECTED || current.tonBalance < tonAmount) return
-    val nexGained = tonAmount * 100.0
+    val toniGained = tonAmount * 100.0
 
     val newTx = WalletTx(
       id = "tx_" + UUID.randomUUID().toString().take(6),
       type = "Swap",
       amount = tonAmount,
-      unit = "TON -> $nexGained NEX",
-      address = "NEXA Pool",
+      unit = "TON -> $toniGained TONI",
+      address = "Tonino Pool",
       date = "Today",
       time = "Just now"
     )
@@ -246,7 +316,7 @@ class NexaViewModel : ViewModel() {
     _walletState.update {
       it.copy(
         tonBalance = it.tonBalance - tonAmount,
-        nexBalance = it.nexBalance + nexGained,
+        toniBalance = it.toniBalance + toniGained,
         txHistory = listOf(newTx) + it.txHistory
       )
     }
@@ -275,7 +345,7 @@ class NexaViewModel : ViewModel() {
     val newReview = ServiceReview(
       id = "rev_" + UUID.randomUUID().toString().take(6),
       serviceId = serviceId,
-      username = if (username.trim().isEmpty()) "anonymous_nex" else username,
+      username = if (username.trim().isEmpty()) "anonymous_toni" else username,
       rating = rating,
       comment = comment,
       date = "Just now",
