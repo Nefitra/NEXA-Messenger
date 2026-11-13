@@ -112,10 +112,15 @@ class ToninoRepository(app: Application) : AndroidViewModel(app) {
     val normalized = canonicalServer(server, BuildConfig.DEBUG)
     require(name.trim().length in 1..60) { "Введите имя длиной до 60 символов" }
     val existing = engine
-    require(existing == null || (!existing.registered && existing.server == normalized && existing.name == name.trim())) {
-      "На устройстве уже создан ключ. Используйте тот же адрес сервера и имя."
+    require(existing == null || !existing.registered) {
+      "На устройстве уже зарегистрирован профиль. Его ключи и сервер не изменены."
     }
-    val e = existing ?: SecureEngine.create(normalized, name.trim(), vault::write).also { engine = it }
+    // Before registration there are no contacts or conversations. A corrected address/name
+    // creates fresh credentials; a retry with unchanged fields reuses the saved token.
+    val reuse = existing != null && existing.server == normalized && existing.name == name.trim()
+    val e = if (reuse) existing!! else SecureEngine.create(normalized, name.trim(), vault::write).also {
+      api?.close(); api = null; engine = it
+    }
     val a = api ?: RelayApi(e).also { api = it }
     a.request("/v1/register", "POST", json("id" to e.id, "token" to e.token, "bundle" to e.bundle()), joinCode.trim())
     e.markRegistered(); publish(); startPoll()

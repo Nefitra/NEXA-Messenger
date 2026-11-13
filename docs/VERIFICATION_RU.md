@@ -2,14 +2,14 @@
 
 Дата: 13 ноября 2026 года.
 
-Файл: `Tonino_0.1.0_test_arm64.apk`, **29 606 789 байт**.
+Файл: `Tonino_0.1.0_test_arm64.apk`, **29 742 239 байт**.
 Идентификатор: `com.tonino.secure.test`, версия `0.1.0-test`, код `100`.
 Минимальная версия Android 8.0 (API 26), целевая Android 16 (API 36), ABI ARM64.
 
 SHA-256 APK:
 
 ```text
-fdaa6845632ef24f2afe58fd9fa40b22844bb3794373f023d913e14e0b4e7cfe
+3fd94354aedb071ad87dd0a343543546f405e2505770eb3cbddbddd7d26b0dc1
 ```
 
 ## Выполнено
