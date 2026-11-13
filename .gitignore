@@ -10,9 +10,17 @@
 /.idea/assetWizardSettings.xml
 .DS_Store
 /build
+**/build/
 /captures
 .externalNativeBuild
 .cxx
 local.properties
 .env
 debug.keystore
+*.jks
+*.keystore
+*.apk
+*.aab
+deploy/turnserver.conf
+deploy/data/
+__pycache__/
