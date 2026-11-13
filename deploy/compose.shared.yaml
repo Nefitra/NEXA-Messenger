@@ -1,0 +1,46 @@
+# Existing Caddy joins the external tonino_proxy network and imports Caddyfile.shared.
+# Only TURN has published ports. The relay is reached through the existing HTTPS ingress.
+name: tonino
+services:
+  relay:
+    build: ../server
+    restart: unless-stopped
+    init: true
+    environment:
+      JOIN_CODE: ${JOIN_CODE:?Run configure.py first}
+      TURN_SECRET: ${TURN_SECRET:?Run configure.py first}
+      TURN_HOST: ${TONINO_DOMAIN:?Set your server address}
+      BIND_ADDRESS: 0.0.0.0
+    volumes:
+      - ./data:/data
+    read_only: true
+    tmpfs:
+      - /tmp:size=16m
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    networks:
+      default:
+      proxy:
+        aliases: [tonino-relay]
+    logging:
+      driver: local
+      options: {max-size: 5m, max-file: "2"}
+  turn:
+    image: coturn/coturn:4.18.0-r0
+    restart: unless-stopped
+    command: [-c, /etc/coturn/turnserver.conf]
+    ports:
+      - 3478:3478/tcp
+      - 3478:3478/udp
+      - 49160-49200:49160-49200/udp
+    volumes:
+      - ./turnserver.conf:/etc/coturn/turnserver.conf:ro
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    logging:
+      driver: local
+      options: {max-size: 5m, max-file: "2"}
+networks:
+  proxy:
+    external: true
+    name: tonino_proxy

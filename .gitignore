@@ -22,5 +22,6 @@ debug.keystore
 *.apk
 *.aab
 deploy/turnserver.conf
+deploy/Caddyfile.shared
 deploy/data/
 __pycache__/
