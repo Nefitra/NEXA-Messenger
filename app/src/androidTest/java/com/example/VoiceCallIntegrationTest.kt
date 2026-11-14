@@ -24,7 +24,7 @@ import java.util.concurrent.atomic.*
 @RunWith(AndroidJUnit4::class)
 class VoiceCallIntegrationTest {
   private val base="http://10.0.2.2:18080"
-  private val join="tonino-native-test-only-fixture"
+  private val join="tonino-native-test-only-fixture-code"
   private val http=OkHttpClient.Builder().connectTimeout(5,TimeUnit.SECONDS).readTimeout(5,TimeUnit.SECONDS).build()
   private fun request(e:SecureEngine,path:String,method:String="GET",body:JsonObject?=null):JsonObject {
     val r=Request.Builder().url(base+path).header("Authorization","Bearer ${e.id}:${e.token}")
