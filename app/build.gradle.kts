@@ -11,8 +11,8 @@ android {
     applicationId = "com.tonino.secure.preview"
     minSdk = 26
     targetSdk = 36
-    versionCode = 101
-    versionName = "0.1.1-preview"
+    versionCode = 102
+    versionName = "0.1.2-preview"
     testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     ndk { abiFilters += (findProperty("toninoAbi")?.toString() ?: "arm64-v8a") }
   }

@@ -53,4 +53,11 @@ class AppUiTest {
     assertTrue(adding)
     capture("empty-chats")
   }
+  @Test fun answerIsDisabledWhileAcceptanceIsPreparing() {
+    compose.setContent { MyApplicationTheme {
+      CallDialog(VoiceState("call", "peer", "incoming"), true, "Собеседник", { fail("Duplicate answer") }, {}, {}, {})
+    } }
+    compose.onNodeWithContentDescription("Ответить").assertIsNotEnabled()
+    compose.onNodeWithText("Готовим ответ…").assertIsDisplayed()
+  }
 }

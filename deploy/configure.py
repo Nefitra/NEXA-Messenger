@@ -41,7 +41,7 @@ use-auth-secret
 static-auth-secret={turn_secret}
 min-port=49160
 max-port=49200
-user-quota=4
+user-quota=8
 total-quota=40
 max-bps=128000
 no-cli
@@ -62,7 +62,6 @@ denied-peer-ip=fc00::-fdff:ffff:ffff:ffff:ffff:ffff:ffff:ffff
 denied-peer-ip=fe80::-febf:ffff:ffff:ffff:ffff:ffff:ffff:ffff
 log-file=stdout
 simple-log
-no-stdout-log
 """)
     # Bind-mounted files are consumed by the unprivileged coturn image.
     # The directory itself remains private to its owner/root.

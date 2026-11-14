@@ -33,6 +33,7 @@ private class RelayApi(private val engine: SecureEngine) {
     if (joinCode != null) builder.header("X-Join-Code", joinCode)
     builder.method(method, if (method == "GET") null else (body ?: JsonObject()).toString().toRequestBody("application/json".toMediaType()))
     val call = client.newCall(builder.build())
+    if (path == "/v1/turn") call.timeout().timeout(8, TimeUnit.SECONDS)
     if (path == "/v1/inbox") poll = call
     try {
       return call.execute().use { r ->
@@ -67,7 +68,10 @@ class ToninoRepository(app: Application) : AndroidViewModel(app) {
         engine?.let { api = RelayApi(it) }
         voice = VoiceSession(app, { work -> if (!closed) runCatching { actor.execute(work) }; Unit },
           { peer, kind, data -> requireNotNull(engine).signal(peer, kind, data); publish(); flush() },
-          { state -> mutable.update { it.copy(call = state) } },
+          { state ->
+            mutable.update { it.copy(call = state) }
+            if (state.phase == "idle" && !visible) api?.cancelPoll()
+          },
           { error -> mutable.update { it.copy(error = error) } })
         publish(); mutable.update { it.copy(loading = false) }
         startPoll()
@@ -165,18 +169,16 @@ class ToninoRepository(app: Application) : AndroidViewModel(app) {
   }
   fun pause() {
     visible = false
-    api?.cancelPoll()
-    if (!closed) actor.execute {
-      try { voice?.end(true) } catch (_: Exception) { }
-    }
+    if (ui.value.call.phase == "idle") api?.cancelPoll()
   }
+  private fun connectionWanted() = !closed && (visible || ui.value.call.phase != "idle")
   private fun startPoll() {
     val e = engine ?: return
     val a = api ?: return
-    if (!visible || !e.registered || !polling.compareAndSet(false, true)) return
+    if (!connectionWanted() || !e.registered || !polling.compareAndSet(false, true)) return
     Thread({
       try {
-        while (visible && !closed) {
+        while (connectionWanted()) {
           try {
             if (!ui.value.online) {
               a.request("/v1/status")
@@ -189,7 +191,7 @@ class ToninoRepository(app: Application) : AndroidViewModel(app) {
             if (packets.isNotEmpty()) {
               actor.submit {
                 for (packet in packets) {
-                  try { e.receive(packet)?.let { if (visible) voice?.receive(it) } }
+                  try { e.receive(packet)?.let { if (connectionWanted()) voice?.receive(it) } }
                   catch (ex: IOException) { throw ex } // Disk failure: do not acknowledge.
                   catch (ex: Exception) { mutable.update { it.copy(error = "Отклонён повторный или неподтверждённый пакет. Ключи не изменены.") } }
                 }
@@ -201,13 +203,13 @@ class ToninoRepository(app: Application) : AndroidViewModel(app) {
           } catch (ex: Exception) {
             mutable.update { it.copy(online = false) }
             // A full/disk-blocked outbox must not prevent retrying already committed packets.
-            if (visible && !closed) runCatching { actor.submit { flush() }.get() }
-            if (visible && !closed) Thread.sleep(1500)
+            if (connectionWanted()) runCatching { actor.submit { flush() }.get() }
+            if (connectionWanted()) Thread.sleep(1500)
           }
         }
       } finally {
         polling.set(false); mutable.update { it.copy(online = false) }
-        if (visible && !closed) actor.execute { startPoll() }
+        if (connectionWanted()) actor.execute { startPoll() }
       }
     }, "tonino-inbox").apply { isDaemon = true; start() }
   }
@@ -216,7 +218,13 @@ class ToninoRepository(app: Application) : AndroidViewModel(app) {
     val turn = requireNotNull(api).request("/v1/turn")
     requireNotNull(voice).start(peer, ui.value.contacts.first { it.id == peer }.name, turn)
   }
-  fun acceptCall() = command { requireNotNull(voice).accept(requireNotNull(api).request("/v1/turn")) }
+  fun acceptCall() = command {
+    val session = requireNotNull(voice)
+    if (session.beginAccept()) {
+      try { session.accept(requireNotNull(api).request("/v1/turn")) }
+      catch (e: Exception) { session.cancelAccept(); throw e }
+    }
+  }
   fun endCall() = command { voice?.end(true) }
   fun toggleMute() = command { voice?.toggleMute() }
   fun toggleSpeaker() = command { voice?.toggleSpeaker() }

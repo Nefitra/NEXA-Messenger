@@ -41,6 +41,12 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.collect
 import com.example.ui.theme.*
 import com.google.zxing.BarcodeFormat
 import com.google.zxing.MultiFormatWriter
@@ -51,12 +57,19 @@ import java.util.Locale
 
 class MainActivity : ComponentActivity() {
   private lateinit var repository: ToninoRepository
+  private lateinit var updater: AppUpdater
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
     window.addFlags(WindowManager.LayoutParams.FLAG_SECURE)
     repository = ViewModelProvider(this)[ToninoRepository::class.java]
-    setContent { MyApplicationTheme { ToninoApp(repository) } }
+    updater = ViewModelProvider(this)[AppUpdater::class.java]
+    lifecycleScope.launch { repeatOnLifecycle(Lifecycle.State.RESUMED) {
+      combine(updater.ui, repository.ui) { update, chat -> update.phase == "ready" && chat.call.phase == "idle" }
+        .collect { ready -> if (ready) updater.maybeInstall(this@MainActivity) }
+    } }
+    setContent { MyApplicationTheme { ToninoApp(repository, updater) } }
   }
+  override fun onResume() { super.onResume(); if (::updater.isInitialized && repository.ui.value.call.phase == "idle") updater.resumed(this) }
   override fun onStart() { super.onStart(); if (::repository.isInitialized) repository.resume() }
   override fun onStop() { if (::repository.isInitialized) repository.pause(); super.onStop() }
 }
@@ -64,8 +77,9 @@ class MainActivity : ComponentActivity() {
 private val BubbleShape = RoundedCornerShape(22.dp)
 private fun time(ms: Long): String = SimpleDateFormat("HH:mm", Locale.getDefault()).format(Date(ms))
 
-@Composable private fun ToninoApp(repo: ToninoRepository) {
+@Composable private fun ToninoApp(repo: ToninoRepository, updater: AppUpdater) {
   val ui by repo.ui.collectAsStateWithLifecycle()
+  val update by updater.ui.collectAsStateWithLifecycle()
   var selected by rememberSaveable { mutableStateOf<String?>(null) }
   var tab by rememberSaveable { mutableStateOf(0) }
   var showAdd by remember { mutableStateOf(false) }
@@ -117,7 +131,8 @@ private fun time(ms: Long): String = SimpleDateFormat("HH:mm", Locale.getDefault
                   }
                 }
               }
-              else -> SettingsScreen(ui, { showInvite = true; repo.createInvitation() }, { showAdd = true }, { showLicenses = true })
+              else -> SettingsScreen(ui, update, updater::downloadLatest, { updater.requestInstall(context as android.app.Activity) },
+                { showInvite = true; repo.createInvitation() }, { showAdd = true }, { showLicenses = true })
             }
           }
           NavigationBar(containerColor = DarkSlate, tonalElevation = 0.dp) {
@@ -147,7 +162,7 @@ private fun time(ms: Long): String = SimpleDateFormat("HH:mm", Locale.getDefault
       } }, confirmButton = { TextButton(onClick = { clipboard.setText(AnnotatedString(code)) }) { Text("Копировать") } },
       dismissButton = { TextButton(onClick = { showSafety = null }) { Text("Закрыть") } })
   }
-  if (ui.call.phase != "idle" && ui.error == null && !micError) CallDialog(ui.call, ui.contacts.find { it.id == ui.call.peer }?.name ?: "Собеседник",
+  if (ui.call.phase != "idle" && ui.error == null && !micError) CallDialog(ui.call, ui.busy, ui.contacts.find { it.id == ui.call.peer }?.name ?: "Собеседник",
     { microphone { repo.acceptCall() } }, repo::endCall, repo::toggleMute, repo::toggleSpeaker)
 }
 
@@ -172,7 +187,7 @@ private fun time(ms: Long): String = SimpleDateFormat("HH:mm", Locale.getDefault
       Icon(Icons.Default.Lock, null); Spacer(Modifier.width(10.dp)); Text("Создать защищённый профиль")
     }
     Text("Номер телефона и адресная книга не нужны. Ключи создаются на этом устройстве.", color = TextSecondary, fontSize = 13.sp)
-    Text("Тестовая версия: для переписки и звонков держите приложение открытым. При выходе из приложения звонок завершается.", color = GoldAccent, fontSize = 12.sp)
+    Text("Тестовая версия: для первого входящего откройте приложение. Принятый звонок продолжается при блокировке экрана.", color = GoldAccent, fontSize = 12.sp)
   }
 }
 @Composable internal fun EmptyContacts(add: () -> Unit) {
@@ -237,7 +252,11 @@ private fun time(ms: Long): String = SimpleDateFormat("HH:mm", Locale.getDefault
     }
   }
 }
-@Composable private fun SettingsScreen(ui: UiState, invite: () -> Unit, add: () -> Unit, licenses: () -> Unit) {
+@Composable private fun SettingsScreen(ui: UiState, update: UpdateState, download: () -> Unit, install: () -> Unit,
+  invite: () -> Unit, add: () -> Unit, licenses: () -> Unit) {
+  val context = LocalContext.current
+  var notificationsAllowed by remember { mutableStateOf(android.os.Build.VERSION.SDK_INT < 33 || context.checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED) }
+  val notifications = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { notificationsAllowed = it }
   Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(24.dp), verticalArrangement = Arrangement.spacedBy(20.dp)) {
     Text("Ваше пространство", fontSize = 24.sp, fontWeight = FontWeight.SemiBold)
     Avatar(ui.name, 68); Text(ui.name, fontSize = 22.sp)
@@ -246,9 +265,26 @@ private fun time(ms: Long): String = SimpleDateFormat("HH:mm", Locale.getDefault
     Text("Ключи и история зашифрованы на устройстве. Смена ключа собеседника блокирует установление новой сессии.", color = TextSecondary)
     OutlinedButton(onClick = invite, modifier = Modifier.fillMaxWidth()) { Text("Моё приглашение") }
     OutlinedButton(onClick = add, modifier = Modifier.fillMaxWidth()) { Text("Добавить собеседника") }
-    Text("Первая тестовая версия", color = GoldAccent, fontWeight = FontWeight.SemiBold)
-    Text("Входящие доступны, пока приложение открыто. При уходе в фон звонок завершается. Не удаляйте приложение: переноса ключей и восстановления истории пока нет.", color = TextSecondary, fontSize = 13.sp)
+    Text("Tonino Preview • ${BuildConfig.VERSION_NAME}", color = GoldAccent, fontWeight = FontWeight.SemiBold)
+    Text("Для первого входящего держите приложение открытым. Принятый звонок продолжается при блокировке экрана; вернуться к нему можно через уведомление. Не удаляйте приложение: переноса ключей и восстановления истории пока нет.", color = TextSecondary, fontSize = 13.sp)
+    if (!notificationsAllowed && android.os.Build.VERSION.SDK_INT >= 33) OutlinedButton(onClick = { notifications.launch(Manifest.permission.POST_NOTIFICATIONS) }) { Text("Включить уведомление о звонке") }
+    UpdateCard(update, ui.call.phase == "idle", download, install)
     TextButton(onClick = licenses) { Text("Исходники и лицензии") }
+  }
+}
+@Composable internal fun UpdateCard(update: UpdateState, enabled: Boolean, download: () -> Unit, install: () -> Unit) {
+  Surface(shape = RoundedCornerShape(18.dp), color = DarkSlate) {
+    Column(Modifier.fillMaxWidth().padding(18.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+      Text("Обновление приложения", fontWeight = FontWeight.SemiBold)
+      Text(update.message, color = TextSecondary, fontSize = 13.sp)
+      if (update.phase == "downloading") {
+        LinearProgressIndicator(progress = { update.progress / 100f }, modifier = Modifier.fillMaxWidth(), color = CyberBlue)
+        Text("${update.progress}%", color = CyberBlue)
+      }
+      if (update.phase == "ready") Button(onClick = install, enabled = enabled) { Text("Установить обновление") }
+      else OutlinedButton(onClick = download, enabled = enabled && update.phase !in setOf("checking", "downloading")) { Text("Проверить и обновить") }
+      Text("Профиль и переписка сохраняются. Установку подтверждает Android.", color = TextSecondary, fontSize = 12.sp)
+    }
   }
 }
 @Composable private fun LicenseDialog(dismiss: () -> Unit) {
@@ -296,19 +332,19 @@ private fun time(ms: Long): String = SimpleDateFormat("HH:mm", Locale.getDefault
     }
   }, confirmButton = { TextButton(onClick = { clipboard.setText(AnnotatedString(invitation)) }, enabled = invitation.isNotEmpty()) { Text("Копировать") } }, dismissButton = { TextButton(onClick = dismiss) { Text("Закрыть") } })
 }
-@Composable private fun CallDialog(call: VoiceState, name: String, accept: () -> Unit, end: () -> Unit, mute: () -> Unit, speaker: () -> Unit) {
+@Composable internal fun CallDialog(call: VoiceState, busy: Boolean, name: String, accept: () -> Unit, end: () -> Unit, mute: () -> Unit, speaker: () -> Unit) {
   Dialog(onDismissRequest = {}) {
     Surface(shape = RoundedCornerShape(30.dp), color = DarkSlate) {
       Column(Modifier.fillMaxWidth().padding(28.dp), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(22.dp)) {
         Icon(Icons.Default.Lock, null, tint = CyberBlue, modifier = Modifier.size(22.dp))
         Avatar(name, 94); Text(name, fontSize = 25.sp, fontWeight = FontWeight.SemiBold)
-        Text(when(call.phase) { "incoming" -> "Входящий звонок"; "outgoing" -> "Вызываем…"; "active" -> "Защищённое соединение"; else -> "Соединяем…" }, color = CyberBlue)
+        Text(when(call.phase) { "incoming" -> if (busy) "Готовим ответ…" else "Входящий звонок"; "accepting" -> "Отвечаем…"; "outgoing" -> "Вызываем…"; "active" -> "Защищённое соединение"; else -> "Соединяем…" }, color = CyberBlue)
         if (call.phase != "incoming") Row(horizontalArrangement = Arrangement.spacedBy(20.dp)) {
           IconButton(onClick = mute) { Icon(if (call.muted) Icons.Default.MicOff else Icons.Default.Mic, "Микрофон", tint = if (call.muted) GoldAccent else TextPrimary) }
           IconButton(onClick = speaker) { Icon(Icons.AutoMirrored.Filled.VolumeUp, "Динамик", tint = if (call.speaker) CyberBlue else TextPrimary) }
         }
         Row(horizontalArrangement = Arrangement.spacedBy(24.dp)) {
-          if (call.phase == "incoming") FilledIconButton(onClick = accept, modifier = Modifier.size(64.dp), colors = IconButtonDefaults.filledIconButtonColors(containerColor = TokenGreen)) { Icon(Icons.Default.Call, "Ответить") }
+          if (call.phase == "incoming") FilledIconButton(onClick = accept, enabled = !busy, modifier = Modifier.size(64.dp), colors = IconButtonDefaults.filledIconButtonColors(containerColor = TokenGreen)) { Icon(Icons.Default.Call, "Ответить") }
           FilledIconButton(onClick = end, modifier = Modifier.size(64.dp), colors = IconButtonDefaults.filledIconButtonColors(containerColor = ErrorRed)) { Icon(Icons.Default.CallEnd, "Завершить") }
         }
       }
