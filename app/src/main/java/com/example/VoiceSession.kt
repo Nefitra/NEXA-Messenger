@@ -259,8 +259,9 @@ class VoiceSession(private val context: Context, private val dispatch: (() -> Un
   internal fun collectStats(callback: RTCStatsCollectorCallback) { checkNotNull(peer) { "Нет активного соединения" }.getStats(callback) }
   @Suppress("DEPRECATION") private fun routeAudio() {
     if (Build.VERSION.SDK_INT >= 31) {
-      val type = if (state.speaker) AudioDeviceInfo.TYPE_BUILTIN_SPEAKER else AudioDeviceInfo.TYPE_BUILTIN_EARPIECE
-      audio.availableCommunicationDevices.firstOrNull { it.type == type }?.let { audio.setCommunicationDevice(it) }
+      if (state.speaker) audio.availableCommunicationDevices.firstOrNull { it.type == AudioDeviceInfo.TYPE_BUILTIN_SPEAKER }
+        ?.let { audio.setCommunicationDevice(it) }
+      else audio.clearCommunicationDevice()
     } else audio.isSpeakerphoneOn = state.speaker
   }
   fun toggleSpeaker() { update(state.copy(speaker = !state.speaker)); routeAudio() }

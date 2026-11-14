@@ -7,7 +7,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 
 /** Run the first method on installed 0.1.1, install -r 0.1.2, then run the second. */
-@androidx.annotation.RequiresApi(28)
+@androidx.test.filters.SdkSuppress(minSdkVersion = 28)
 @RunWith(AndroidJUnit4::class)
 class UpgradePersistenceTest {
   @Test fun seedOldInstall() {
