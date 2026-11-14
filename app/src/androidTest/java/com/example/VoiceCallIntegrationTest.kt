@@ -43,9 +43,11 @@ class VoiceCallIntegrationTest {
     val config=JsonParser.parseString(probe.readText()).asJsonObject
     ActivityScenario.launch(MainActivity::class.java).use { screen ->
       try {
-        for(protocol in listOf("tcp","udp")) {
+        for(protocol in listOf("tcp","udp","fallback")) {
           fun turn(name:String):JsonObject = config.obj(name).deepCopy().apply {
-            val filtered=array("urls").filter{it.asString.endsWith("transport=$protocol")}
+            val filtered=if(protocol=="fallback") array("urls").map {
+              if(it.asString.endsWith("transport=tcp")) JsonPrimitive(it.asString.replace(":3478?",":3479?")) else it
+            } else array("urls").filter{it.asString.endsWith("transport=$protocol")}
             check(filtered.isNotEmpty());add("urls",Gson().toJsonTree(filtered))
           }
           val a=SecureEngine.create(base,"Проверка А"){}
@@ -143,7 +145,7 @@ class VoiceCallIntegrationTest {
             actorA.shutdownNow();actorB.shutdownNow()
           }
         }
-        println("VOICE_CALL_ACTIVE_BOTH_AND_AUDIO_RTP_OK: HTTP signaling TCP+UDP; background70s; duplicate answer; rapid redial")
+        println("VOICE_CALL_ACTIVE_BOTH_AND_AUDIO_RTP_OK: HTTP signaling TCP+UDP+fallback; background70s; duplicate answer; rapid redial")
       } finally {
         instrumentation.uiAutomation.executeShellCommand("input keyevent 224").close()
         probe.delete();http.dispatcher.cancelAll();http.connectionPool.evictAll()

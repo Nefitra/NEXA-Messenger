@@ -1,7 +1,10 @@
 package com.example
 
 import android.content.Context
-import android.media.*
+import android.media.AudioManager
+import android.media.AudioAttributes
+import android.media.AudioFocusRequest
+import android.media.AudioDeviceInfo
 import android.os.Build
 import android.util.Log
 import com.google.gson.JsonObject
@@ -23,6 +26,9 @@ class VoiceSession(private val context: Context, private val dispatch: (() -> Un
   private val timer = Executors.newSingleThreadScheduledExecutor()
   private var setupTimer: ScheduledFuture<*>? = null
   private var disconnectTimer: ScheduledFuture<*>? = null
+  private var gatherTimer: ScheduledFuture<*>? = null
+  private var peerGeneration = 0
+  private var serviceStarted = false
   private var adm: JavaAudioDeviceModule? = null
   private var factory: PeerConnectionFactory? = null
   private var peer: PeerConnection? = null
@@ -109,15 +115,20 @@ class VoiceSession(private val context: Context, private val dispatch: (() -> Un
       }
     } }, 60, TimeUnit.SECONDS)
   }
-  private fun createPeer(turn: JsonObject) {
-    CallAudioService.start(context) { dispatch { end(true) } }
+  private fun createPeer(turn: JsonObject, udpFallback: Boolean = false) {
+    if (!serviceStarted) {
+      CallAudioService.start(context) { dispatch { end(true) } }
+      serviceStarted = true
+    }
     val factory = audioFactory()
     val all = turn.array("urls").map { it.asString }
     require(all.isNotEmpty() && all.all { it.startsWith("turn:") || it.startsWith("turns:") })
     // A TCP connection to TURN works in mobile/Wi-Fi networks that filter UDP.
     // TURN-to-TURN media still stays relayed and DTLS/SRTP protected.
     val reliable = all.filter { it.startsWith("turns:") || it.contains("transport=tcp") }
-    val urls = reliable.ifEmpty { all }
+    val datagram = all.filter { it.contains("transport=udp") }
+    val canFallback = !udpFallback && reliable.isNotEmpty() && datagram.isNotEmpty()
+    val urls = if (udpFallback) datagram else reliable.ifEmpty { all }
     val ice = PeerConnection.IceServer.builder(urls).setUsername(turn.text("username")).setPassword(turn.text("credential")).createIceServer()
     val config = PeerConnection.RTCConfiguration(listOf(ice)).apply {
       sdpSemantics = PeerConnection.SdpSemantics.UNIFIED_PLAN
@@ -125,26 +136,27 @@ class VoiceSession(private val context: Context, private val dispatch: (() -> Un
       continualGatheringPolicy = PeerConnection.ContinualGatheringPolicy.GATHER_CONTINUALLY
     }
     val callId = state.id
+    val generation = ++peerGeneration
     localSent = false; localRelays = 0; remoteReady = false
     peer = factory.createPeerConnection(config, object : PeerConnection.Observer {
       override fun onSignalingChange(s: PeerConnection.SignalingState?) {}
       override fun onConnectionChange(s: PeerConnection.PeerConnectionState?) { dispatch {
-        if (state.id != callId) return@dispatch
+        if (state.id != callId || peerGeneration != generation) return@dispatch
         when (s) {
           PeerConnection.PeerConnectionState.CONNECTED -> {
             setupTimer?.cancel(false); disconnectTimer?.cancel(false)
             update(state.copy(phase = "active"))
           }
-          PeerConnection.PeerConnectionState.FAILED -> transportFailure(callId)
+          PeerConnection.PeerConnectionState.FAILED -> if (canFallback && !localSent) fallbackToUdp(callId, generation, turn) else transportFailure(callId)
           else -> {}
         }
       } }
       override fun onIceConnectionChange(s: PeerConnection.IceConnectionState?) { dispatch {
-        if (state.id != callId) return@dispatch
+        if (state.id != callId || peerGeneration != generation) return@dispatch
         Log.i("ToninoCall", "ICE=$s relayCandidates=$localRelays")
         when (s) {
           PeerConnection.IceConnectionState.CONNECTED, PeerConnection.IceConnectionState.COMPLETED -> disconnectTimer?.cancel(false)
-          PeerConnection.IceConnectionState.FAILED -> transportFailure(callId)
+          PeerConnection.IceConnectionState.FAILED -> if (canFallback && !localSent) fallbackToUdp(callId, generation, turn) else transportFailure(callId)
           PeerConnection.IceConnectionState.DISCONNECTED -> {
             update(state.copy(phase = "connecting")); disconnectTimer?.cancel(false)
             disconnectTimer = timer.schedule({ dispatch {
@@ -156,13 +168,15 @@ class VoiceSession(private val context: Context, private val dispatch: (() -> Un
       } }
       override fun onIceConnectionReceivingChange(receiving: Boolean) {}
       override fun onIceGatheringChange(s: PeerConnection.IceGatheringState?) { if (s == PeerConnection.IceGatheringState.COMPLETE) dispatch {
-        if (state.id == callId && !localSent) {
-          if (localRelays == 0) { onError("Ретранслятор не выдал адрес для звонка. Проверьте подключение к сети."); end(true) }
+        if (state.id == callId && peerGeneration == generation && !localSent) {
+          if (localRelays == 0 && canFallback) fallbackToUdp(callId, generation, turn)
+          else if (localRelays == 0) { onError("Ретранслятор не выдал адрес для звонка. Проверьте подключение к сети."); end(true) }
           else sendLocal()
         }
       } }
       override fun onIceCandidate(candidate: IceCandidate?) { if (candidate != null) dispatch {
-        if (state.id != callId || !candidate.sdp.contains(" typ relay")) return@dispatch
+        if (state.id != callId || peerGeneration != generation || !candidate.sdp.contains(" typ relay")) return@dispatch
+        gatherTimer?.cancel(false)
         localRelays++
         if (!localSent) sendLocal()
         if (localSent) runCatching { send(state.peer, "call_ice", json("callId" to callId, "candidate" to candidate.sdp,
@@ -180,6 +194,22 @@ class VoiceSession(private val context: Context, private val dispatch: (() -> Un
     source = factory.createAudioSource(MediaConstraints())
     track = factory.createAudioTrack("tonino-audio", source).also { it.setEnabled(!state.muted) }
     peer!!.addTrack(track, listOf("tonino"))
+    if (canFallback) gatherTimer = timer.schedule({ dispatch {
+      if (state.id == callId && peerGeneration == generation && !localSent) fallbackToUdp(callId, generation, turn)
+    } }, 12, TimeUnit.SECONDS)
+  }
+  private fun fallbackToUdp(callId: String, generation: Int, turn: JsonObject) {
+    if (state.id != callId || peerGeneration != generation || localSent) return
+    Log.i("ToninoCall", "TCP allocation unavailable; retrying UDP relay")
+    gatherTimer?.cancel(false); peerGeneration++
+    peer?.close(); peer?.dispose(); peer = null
+    track?.dispose(); track = null; source?.dispose(); source = null
+    try {
+      createPeer(turn, true)
+      if (pendingKind == "call_answer") setRemote(SessionDescription.Type.OFFER, remoteOffer) { createDescription(true) }
+      else createDescription(false)
+      timeout(callId)
+    } catch (_: Exception) { transportFailure(callId) }
   }
   private fun transportFailure(callId: String) {
     if (state.id != callId || state.phase == "idle") return
@@ -188,17 +218,18 @@ class VoiceSession(private val context: Context, private val dispatch: (() -> Un
   }
   private fun createDescription(answer: Boolean) {
     val callId = state.id
+    val generation = peerGeneration
     val observer = object : SdpObserver {
       override fun onCreateSuccess(sdp: SessionDescription?) { dispatch {
-        if (state.id != callId || sdp == null) return@dispatch
+        if (state.id != callId || peerGeneration != generation || sdp == null) return@dispatch
         peer?.setLocalDescription(object : SdpObserver {
-          override fun onSetSuccess() { dispatch { if (state.id == callId && localRelays > 0) sendLocal() } }
-          override fun onSetFailure(message: String?) { failure(callId) }
+          override fun onSetSuccess() { dispatch { if (state.id == callId && peerGeneration == generation && localRelays > 0) sendLocal() } }
+          override fun onSetFailure(message: String?) { failure(callId, generation) }
           override fun onCreateSuccess(sdp: SessionDescription?) {}
           override fun onCreateFailure(message: String?) {}
         }, sdp)
       } }
-      override fun onCreateFailure(message: String?) { failure(callId) }
+      override fun onCreateFailure(message: String?) { failure(callId, generation) }
       override fun onSetSuccess() {}
       override fun onSetFailure(message: String?) {}
     }
@@ -213,16 +244,17 @@ class VoiceSession(private val context: Context, private val dispatch: (() -> Un
   }
   private fun setRemote(type: SessionDescription.Type, description: String, success: () -> Unit) {
     val callId = state.id
+    val generation = peerGeneration
     peer?.setRemoteDescription(object : SdpObserver {
-      override fun onSetSuccess() { dispatch { if (state.id == callId) {
+      override fun onSetSuccess() { dispatch { if (state.id == callId && peerGeneration == generation) {
         remoteReady = true; pendingIce.forEach { peer?.addIceCandidate(it) }; pendingIce.clear(); success()
       } } }
-      override fun onSetFailure(message: String?) { failure(callId) }
+      override fun onSetFailure(message: String?) { failure(callId, generation) }
       override fun onCreateSuccess(sdp: SessionDescription?) {}
       override fun onCreateFailure(message: String?) {}
     }, SessionDescription(type, description))
   }
-  private fun failure(callId: String) { dispatch { if (state.id == callId) { onError("Не удалось согласовать защищённый звонок."); end(true) } } }
+  private fun failure(callId: String, generation: Int) { dispatch { if (state.id == callId && peerGeneration == generation) { onError("Не удалось согласовать защищённый звонок."); end(true) } } }
   fun toggleMute() { update(state.copy(muted = !state.muted)); track?.setEnabled(!state.muted) }
   internal fun collectStats(callback: RTCStatsCollectorCallback) { checkNotNull(peer) { "Нет активного соединения" }.getStats(callback) }
   @Suppress("DEPRECATION") private fun routeAudio() {
@@ -236,11 +268,13 @@ class VoiceSession(private val context: Context, private val dispatch: (() -> Un
     if (state.phase == "idle") return
     val old = state; update(VoiceState())
     setupTimer?.cancel(false); disconnectTimer?.cancel(false)
+    gatherTimer?.cancel(false); peerGeneration++
     peer?.close(); peer?.dispose(); peer = null
     track?.dispose(); track = null; source?.dispose(); source = null
     if (Build.VERSION.SDK_INT >= 31) audio.clearCommunicationDevice()
     audio.abandonAudioFocusRequest(focus); audio.mode = AudioManager.MODE_NORMAL
     CallAudioService.stop(context)
+    serviceStarted = false
     remoteOffer = ""; pendingKind = ""; localSent = false; remoteReady = false; pendingIce.clear()
     if (notify) runCatching { send(old.peer, "call_end", json("callId" to old.id, "reason" to "ended")) }
   }
