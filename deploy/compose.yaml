@@ -1,0 +1,53 @@
+name: tonino
+services:
+  relay:
+    build: ../server
+    restart: unless-stopped
+    init: true
+    environment:
+      JOIN_CODE: ${JOIN_CODE:?Run configure.py first}
+      TURN_SECRET: ${TURN_SECRET:?Run configure.py first}
+      TURN_HOST: ${TONINO_DOMAIN:?Set your domain}
+      BIND_ADDRESS: 0.0.0.0
+    volumes:
+      - ./data:/data
+    read_only: true
+    tmpfs:
+      - /tmp:size=16m
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    logging:
+      driver: local
+      options: {max-size: 5m, max-file: "2"}
+  https:
+    image: caddy:2
+    restart: unless-stopped
+    environment:
+      TONINO_DOMAIN: ${TONINO_DOMAIN:?Set your domain}
+    ports:
+      - 80:80
+      - 443:443
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      relay: {condition: service_healthy}
+    logging:
+      driver: local
+      options: {max-size: 5m, max-file: "2"}
+  turn:
+    image: coturn/coturn:4.18.0-r0
+    restart: unless-stopped
+    network_mode: host
+    command:
+      - -c
+      - /etc/coturn/turnserver.conf
+    volumes:
+      - ./turnserver.conf:/etc/coturn/turnserver.conf:ro
+    logging:
+      driver: local
+      options: {max-size: 5m, max-file: "2"}
+volumes:
+  caddy_data:
+  caddy_config:

@@ -77,7 +77,7 @@ fun MyApplicationTheme(
   } else {
     darkColorScheme(
       primary = ActiveColors.cyberBlue,
-      onPrimary = Color.White,
+      onPrimary = Color(0xFF050B18),
       background = ActiveColors.background,
       onBackground = ActiveColors.textPrimary,
       surface = ActiveColors.surface,
