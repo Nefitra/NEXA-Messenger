@@ -20,6 +20,10 @@ data class VoiceState(val id: String = "", val peer: String = "", val phase: Str
 class VoiceSession(private val context: Context, private val dispatch: (() -> Unit) -> Unit,
   private val send: (String, String, JsonObject) -> Unit, private val onState: (VoiceState) -> Unit,
   private val onError: (String) -> Unit) {
+  private companion object {
+    val initializationLock = Any()
+    var initialized = false
+  }
   private val audio = context.getSystemService(Context.AUDIO_SERVICE) as AudioManager
   private val timer = Executors.newSingleThreadScheduledExecutor()
   private var adm: JavaAudioDeviceModule? = null
@@ -36,7 +40,12 @@ class VoiceSession(private val context: Context, private val dispatch: (() -> Un
       .setContentType(AudioAttributes.CONTENT_TYPE_SPEECH).build()).build()
   private fun audioFactory(): PeerConnectionFactory {
     factory?.let { return it }
-    PeerConnectionFactory.initialize(PeerConnectionFactory.InitializationOptions.builder(context).createInitializationOptions())
+    synchronized(initializationLock) {
+      if (!initialized) {
+        PeerConnectionFactory.initialize(PeerConnectionFactory.InitializationOptions.builder(context).createInitializationOptions())
+        initialized = true
+      }
+    }
     adm = JavaAudioDeviceModule.builder(context).createAudioDeviceModule()
     return PeerConnectionFactory.builder().setAudioDeviceModule(adm).createPeerConnectionFactory().also { factory = it }
   }
@@ -168,6 +177,9 @@ class VoiceSession(private val context: Context, private val dispatch: (() -> Un
   }
   private fun failure(callId: String) { dispatch { if (state.id == callId) { onError("Не удалось согласовать защищённый звонок."); end(true) } } }
   fun toggleMute() { update(state.copy(muted = !state.muted)); track?.setEnabled(!state.muted) }
+  internal fun collectStats(callback: RTCStatsCollectorCallback) {
+    checkNotNull(peer) { "Нет активного соединения" }.getStats(callback)
+  }
   @Suppress("DEPRECATION") fun toggleSpeaker() { update(state.copy(speaker = !state.speaker)); audio.isSpeakerphoneOn = state.speaker }
   fun end(notify: Boolean) {
     if (state.phase == "idle") return

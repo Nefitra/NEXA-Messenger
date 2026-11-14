@@ -19,6 +19,8 @@ local.properties
 debug.keystore
 *.jks
 *.keystore
+*.p12
+*.pfx
 *.apk
 *.aab
 deploy/turnserver.conf
